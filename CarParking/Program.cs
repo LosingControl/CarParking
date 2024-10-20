@@ -1,22 +1,38 @@
 
+using CarParking.DataBase.Context;
+using CarParking.DataBase.Interfaces;
+using CarParking.DataBase.Repositories;
+using CarParking.Models;
+using CarParking.Services;
+using CarParking.Services.Interfaces;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+
 namespace CarParking
 {
     public class Program
     {
+        public const string _CONNECTION_STRING_EnvNAME = "DEFAULT_PARKING_CONNECTION";
+
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
-
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            //Подключение базы данных
+            string? connectionString = Environment.GetEnvironmentVariable(_CONNECTION_STRING_EnvNAME);
+            builder.Services.AddDbContext<DbContext, ParkingDbContext>(options => 
+                options.UseNpgsql(connectionString));
+
+            builder.Services.AddScoped<IParkingRepository, ParkingRepository>();
+            builder.Services.AddScoped<IParkingService, ParkingService>();
+            builder.Services.AddScoped<IPasswordHasher<UserDatum>, PasswordHasher<UserDatum>>();
+
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
